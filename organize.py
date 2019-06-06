@@ -8,7 +8,7 @@ from os.path import join, isfile, exists as path_exists, dirname, getsize
 from shutil import move
 from sys import argv, exit
 from hashlib import md5
-import argparse
+from argparse import ArgumentParser
 
 def organize(args, size):
     """Organizes the target directory to match the file structure of the source directory
@@ -86,7 +86,7 @@ def hash(fname):
     return hash_md5.hexdigest()
 
 # Parse arguements
-parser = argparse.ArgumentParser(description='Reorganizes the target directory to match the file structure and names as the source directory based on checksums.')
+parser = ArgumentParser(description='Reorganizes the target directory to match the file structure and names as the source directory based on checksums.')
 parser.add_argument('source', type=str, help='the dir to get copy the file structure from.')
 parser.add_argument('target', type=str, help='the dir to recreate the file structure in.')
 parser.add_argument('-i', '--id', type=str, default='md5', choices=['md5', 'size'], help='The method to id files. md5 id\'s files by their md5 hash and size by their size. First run -s to check if size will work.')
