@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """
 Reorganizes the target directory to match the file structure and names as the source directory based on checksums.
-Usage: ./organize.py <source dir> <target dir>
+Usage: ./organize.py -h
 """
 from os import walk, makedirs, listdir, rmdir
 from os.path import join, isfile, exists as path_exists, dirname, getsize
@@ -11,6 +11,12 @@ from hashlib import md5
 import argparse
 
 def organize(args, size):
+    """Organizes the target directory to match the file structure of the source directory
+
+    Arguments:
+        args {Namespace} -- args.source {str} and args.target {str} are the source and target directories to coppy the file structure from and to, respectively
+        size {bool} -- If true -> id files by their size. Else -> id files by their md5 hash
+    """
     source_files = {}
 
     for folder in [args.source, args.target]:
@@ -45,6 +51,14 @@ def organize(args, size):
                                 rmdir(subdir)
 
 def checkForSizeConflicts(args):
+    """Checks if any two files of the same size exist in either the source or target directories
+
+    Arguments:
+        args {Namespace} -- args.source {str} and args.target {str} are the two directories to check
+
+    Returns:
+        array -- Array containing the two file paths that are found to be the same size, None if no conflicting files found
+    """
     for folder in [args.source, args.target]:
         sizes = {}
         for subdir, dirs, files in walk(folder):
@@ -54,18 +68,24 @@ def checkForSizeConflicts(args):
                 if size in sizes:
                     return [fpath, sizes[size]]
                 sizes[size] = fpath
+    return None
 
-"""
-Computes the md5 hash of the given file
-"""
 def hash(fname):
+    """Computes the md5 hash of the given file
+
+    Arguments:
+        fname {str} -- name of file to hash
+
+    Returns:
+        str -- md5 hash of the file
+    """
     hash_md5 = md5()
     with open(fname, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-
+# Parse arguements
 parser = argparse.ArgumentParser(description='Reorganizes the target directory to match the file structure and names as the source directory based on checksums.')
 parser.add_argument('source', type=str, help='the dir to get copy the file structure from.')
 parser.add_argument('target', type=str, help='the dir to recreate the file structure in.')
@@ -73,6 +93,7 @@ parser.add_argument('-i', '--id', type=str, default='md5', choices=['md5', 'size
 parser.add_argument('-s', '--sizecheck', action='store_true', help='Check if the size id will work. Do not change any files.')
 args = parser.parse_args()
 
+# Decide what to do
 size = args.id == 'size'
 if size or args.sizecheck:
     conflict = checkForSizeConflicts(args)
@@ -83,4 +104,3 @@ if size or args.sizecheck:
         print('No size conflicts exist.')
 if not args.sizecheck:
     organize(args, size)
-
