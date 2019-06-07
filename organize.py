@@ -6,7 +6,7 @@ Usage: ./organize.py -h
 from os import walk, makedirs, listdir, rmdir
 from os.path import join, isfile, exists as path_exists, dirname, getsize
 from shutil import move
-from sys import argv, exit
+from sys import exit
 from hashlib import md5
 from argparse import ArgumentParser
 
@@ -27,14 +27,14 @@ def organize(args, size):
                     id = getsize(join(subdir, f))
                 else:
                     id = hash(join(subdir, f))
-                if folder == argv[1]:
+                if folder == args.source:
                     # Add files from source to an array
-                    source_files[id] = ({'path': join(subdir[len(argv[1]):], f)})
+                    source_files[id] = ({'path': join(subdir[len(args.source):], f)})
                 else:
                     # Check if hash exists in source_files. If yes -> move and rename to match source
                     if id in source_files:
                         current_path = join(subdir,f)
-                        new_path = join(argv[2], source_files[id]['path'])
+                        new_path = join(args.target, source_files[id]['path'])
                         print(current_path + ' --> ' + new_path)
                         if current_path != new_path:
                             # Check if file already exists in new_path. If yes -> rename it
@@ -50,16 +50,16 @@ def organize(args, size):
                             if len(listdir(subdir)) == 0:
                                 rmdir(subdir)
 
-def checkForSizeConflicts(args):
+def checkForSizeConflicts(folders):
     """Checks if any two files of the same size exist in either the source or target directories
 
     Arguments:
-        args {Namespace} -- args.source {str} and args.target {str} are the two directories to check
+        folders {str array} -- folders to check for conflicting data in, normally source and target folders
 
     Returns:
         array -- Array containing the two file paths that are found to be the same size, None if no conflicting files found
     """
-    for folder in [args.source, args.target]:
+    for folder in folders:
         sizes = {}
         for subdir, dirs, files in walk(folder):
             for f in files:
@@ -96,7 +96,7 @@ args = parser.parse_args()
 # Decide what to do
 size = args.id == 'size'
 if size or args.sizecheck:
-    conflict = checkForSizeConflicts(args)
+    conflict = checkForSizeConflicts([args.source, args.target])
     if conflict:
         print('Size conflicts exist. Size id will not work.\nConflicting files: '+str(conflict))
         exit()
